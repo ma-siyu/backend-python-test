@@ -56,7 +56,7 @@ def todo(id):
 def todos():
     if not session.get('logged_in'):
         return redirect('/login')
-    cur = g.db.execute("SELECT * FROM todos")
+    cur = g.db.execute("SELECT * FROM todos WHERE todo_status = 0")
     todos = cur.fetchall()
     return render_template('todos.html', todos=todos)
 
@@ -71,8 +71,8 @@ def todos_POST():
         flash("Cannot add a todo with no description.")
     else:
         g.db.execute(
-            "INSERT INTO todos (user_id, description) VALUES ('%s', '%s')"
-            % (session['user']['id'], description)
+            "INSERT INTO todos (user_id, description, todo_status) VALUES ('%s', '%s', '%d')"
+            % (session['user']['id'], description, 0)
         )
         g.db.commit()
     return redirect('/todo')
@@ -83,5 +83,13 @@ def todo_delete(id):
     if not session.get('logged_in'):
         return redirect('/login')
     g.db.execute("DELETE FROM todos WHERE id ='%s'" % id)
+    g.db.commit()
+    return redirect('/todo')
+
+@app.route('/todo_completed/<id>', methods=['POST'])
+def todo_completed(id):
+    if not session.get('logged_in'):
+        return redirect('/login')
+    g.db.execute("UPDATE todos SET todo_status = 1 WHERE id ='%s'" % id)
     g.db.commit()
     return redirect('/todo')

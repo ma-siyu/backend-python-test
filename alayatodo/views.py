@@ -7,6 +7,8 @@ from flask import (
     session,
     flash
     )
+import json
+from collections import OrderedDict
 
 
 @app.route('/')
@@ -86,6 +88,7 @@ def todo_delete(id):
     g.db.commit()
     return redirect('/todo')
 
+
 @app.route('/todo_completed/<id>', methods=['POST'])
 def todo_completed(id):
     if not session.get('logged_in'):
@@ -93,3 +96,12 @@ def todo_completed(id):
     g.db.execute("UPDATE todos SET todo_status = 1 WHERE id ='%s'" % id)
     g.db.commit()
     return redirect('/todo')
+
+
+@app.route('/todo/<id>/json', methods=['GET'])
+def todo_json(id):
+    if not session.get('logged_in'):
+        return redirect('/login')
+    cur = g.db.execute("SELECT id, user_id, description FROM todos WHERE id ='%s'" % id)
+    json_string = json.dumps(OrderedDict(cur.fetchone()))
+    return render_template('json.html', json_string=json_string)

@@ -4,7 +4,7 @@
 <div class="col-md-4 col-md-offset-4">
     <h1>Todo List:</h1>
     <table class="table table-striped">
-        <th>#</th><th>User</th><th>Description</th><th></th><th></th>
+        <th>#</th><th>User</th><th>Description</th><th></th><th></th><th></th>
         {% for todo in todos %}
             <tr>
                 <td>{{ todo.id }}</td>
@@ -24,6 +24,11 @@
                         <button type="submit" class="btn btn-xs btn-danger"><span class="glyphicon glyphicon-remove glyphicon-white"></span></button>
                     </form>
                 </td>
+                <td>
+                    <form method="get" action="{{ url_for('todo_json', id=todo.id)}}">
+                        <button type="submit" class="btn btn-xs btn-info">JSON</button>
+                    </form>
+                </td>
             </tr>
         {% endfor %}
         <tr>
@@ -35,7 +40,7 @@
                     <button type="submit" class="btn btn-sm btn-primary">Add</button>
                 </td>
             </form>
-        </tr><tr></tr>
+        </tr><tr></tr><tr></tr>
     </table>
 </div>
 {% endblock %}

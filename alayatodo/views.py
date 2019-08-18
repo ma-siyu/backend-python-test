@@ -4,11 +4,8 @@ from flask import (
     redirect,
     render_template,
     request,
-    session,
-    flash
+    session
     )
-import json
-from collections import OrderedDict
 
 
 @app.route('/')
@@ -58,7 +55,7 @@ def todo(id):
 def todos():
     if not session.get('logged_in'):
         return redirect('/login')
-    cur = g.db.execute("SELECT * FROM todos WHERE todo_status = 0")
+    cur = g.db.execute("SELECT * FROM todos")
     todos = cur.fetchall()
     return render_template('todos.html', todos=todos)
 
@@ -68,16 +65,11 @@ def todos():
 def todos_POST():
     if not session.get('logged_in'):
         return redirect('/login')
-    description = request.form.get('description', '')
-    if not description.strip():
-        flash("Cannot add a todo with no description.")
-    else:
-        g.db.execute(
-            "INSERT INTO todos (user_id, description, todo_status) VALUES ('%s', '%s', '%d')"
-            % (session['user']['id'], description, 0)
-        )
-        g.db.commit()
-        flash("Added a new todo successfully.")
+    g.db.execute(
+        "INSERT INTO todos (user_id, description) VALUES ('%s', '%s')"
+        % (session['user']['id'], request.form.get('description', ''))
+    )
+    g.db.commit()
     return redirect('/todo')
 
 
@@ -87,22 +79,4 @@ def todo_delete(id):
         return redirect('/login')
     g.db.execute("DELETE FROM todos WHERE id ='%s'" % id)
     g.db.commit()
-    flash("deleted a todo successfully.")
     return redirect('/todo')
-
-
-@app.route('/todo_completed/<id>', methods=['POST'])
-def todo_completed(id):
-    if not session.get('logged_in'):
-        return redirect('/login')
-    g.db.execute("UPDATE todos SET todo_status = 1 WHERE id ='%s'" % id)
-    g.db.commit()
-    return redirect('/todo')
-
-@app.route('/todo/<id>/json', methods=['GET'])
-def todo_json(id):
-    if not session.get('logged_in'):
-        return redirect('/login')
-    cur = g.db.execute("SELECT id, user_id, description FROM todos WHERE id ='%s'" % id)
-    json_string = json.dumps(OrderedDict(cur.fetchone()))
-    return render_template('json.html', json_string=json_string)

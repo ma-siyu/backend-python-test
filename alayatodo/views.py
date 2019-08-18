@@ -77,6 +77,7 @@ def todos_POST():
             % (session['user']['id'], description, 0)
         )
         g.db.commit()
+        flash("Added a new todo successfully.")
     return redirect('/todo')
 
 
@@ -86,6 +87,7 @@ def todo_delete(id):
         return redirect('/login')
     g.db.execute("DELETE FROM todos WHERE id ='%s'" % id)
     g.db.commit()
+    flash("deleted a todo successfully.")
     return redirect('/todo')
 
 
@@ -96,7 +98,6 @@ def todo_completed(id):
     g.db.execute("UPDATE todos SET todo_status = 1 WHERE id ='%s'" % id)
     g.db.commit()
     return redirect('/todo')
-
 
 @app.route('/todo/<id>/json', methods=['GET'])
 def todo_json(id):

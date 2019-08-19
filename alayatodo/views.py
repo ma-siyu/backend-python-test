@@ -5,7 +5,8 @@ from flask import (
     render_template,
     request,
     session,
-    flash
+    flash,
+    url_for
     )
 import json
 from collections import OrderedDict
@@ -35,7 +36,6 @@ def login_POST():
         session['user'] = user.serialize
         session['logged_in'] = True
         return redirect('/todo')
-
     return redirect('/login')
 
 
@@ -69,6 +69,7 @@ def todos():
         return redirect('/todo/page/')
 
 
+
 @app.route('/todo', methods=['POST'])
 @app.route('/todo/', methods=['POST'])
 def todos_POST():
@@ -82,7 +83,15 @@ def todos_POST():
         db.session.add(todo)
         db.session.commit()
         flash("Added a new todo successfully.")
+
+        # If has multiple pages, redirect to last page after addition
+        count = db.session.query(Todo).filter(Todo.user_id == session['user']['id']).filter(Todo.todo_status == False).count()
+        if count > 5:
+            # Page number is the ceiling division of todos count
+            return redirect(url_for('todo_paginated', page=(count+4)//5))
+
     return redirect('/todo')
+
 
 
 @app.route('/todo/<id>', methods=['POST'])

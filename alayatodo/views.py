@@ -9,6 +9,7 @@ from flask import (
     )
 import json
 from collections import OrderedDict
+from .models import db, User, Todo
 
 
 @app.route('/')
@@ -28,11 +29,10 @@ def login_POST():
     username = request.form.get('username')
     password = request.form.get('password')
 
-    sql = "SELECT * FROM users WHERE username = '%s' AND password = '%s'";
-    cur = g.db.execute(sql % (username, password))
-    user = cur.fetchone()
+    user = db.session.query(User).filter(User.username == username).filter(User.password == password).first()
+
     if user:
-        session['user'] = dict(user)
+        session['user'] = user.serialize
         session['logged_in'] = True
         return redirect('/todo')
 
@@ -48,8 +48,7 @@ def logout():
 
 @app.route('/todo/<id>', methods=['GET'])
 def todo(id):
-    cur = g.db.execute("SELECT * FROM todos WHERE id ='%s'" % id)
-    todo = cur.fetchone()
+    todo = db.seesion.query(Todo).get(id)
     return render_template('todo.html', todo=todo)
 
 
@@ -58,8 +57,8 @@ def todo(id):
 def todos():
     if not session.get('logged_in'):
         return redirect('/login')
-    cur = g.db.execute("SELECT * FROM todos WHERE todo_status = 0")
-    todos = cur.fetchall()
+    todos = db.session.query(Todo).filter(Todo.todo_status == False).all()
+
     return render_template('todos.html', todos=todos)
 
 
@@ -72,11 +71,9 @@ def todos_POST():
     if not description.strip():
         flash("Cannot add a todo with no description.")
     else:
-        g.db.execute(
-            "INSERT INTO todos (user_id, description, todo_status) VALUES ('%s', '%s', '%d')"
-            % (session['user']['id'], description, 0)
-        )
-        g.db.commit()
+        todo = Todo(user_id=session['user']['id'], description=description, todo_status=False)
+        db.session.add(todo)
+        db.session.commit()
         flash("Added a new todo successfully.")
     return redirect('/todo')
 
@@ -85,8 +82,9 @@ def todos_POST():
 def todo_delete(id):
     if not session.get('logged_in'):
         return redirect('/login')
-    g.db.execute("DELETE FROM todos WHERE id ='%s'" % id)
-    g.db.commit()
+    todo = db.session.query(Todo).get(id)
+    db.session.delete(todo)
+    db.session.commit()
     flash("deleted a todo successfully.")
     return redirect('/todo')
 
@@ -95,14 +93,15 @@ def todo_delete(id):
 def todo_completed(id):
     if not session.get('logged_in'):
         return redirect('/login')
-    g.db.execute("UPDATE todos SET todo_status = 1 WHERE id ='%s'" % id)
-    g.db.commit()
+    db.session.query(Todo).filter(Todo.id == id).update({Todo.todo_status: True}, synchronize_session = False)
+    db.session.commit()
     return redirect('/todo')
+
 
 @app.route('/todo/<id>/json', methods=['GET'])
 def todo_json(id):
     if not session.get('logged_in'):
         return redirect('/login')
-    cur = g.db.execute("SELECT id, user_id, description FROM todos WHERE id ='%s'" % id)
-    json_string = json.dumps(OrderedDict(cur.fetchone()))
+    todo = db.session.query(Todo).get(id)
+    json_string = json.dumps(todo.serialize)
     return render_template('json.html', json_string=json_string)

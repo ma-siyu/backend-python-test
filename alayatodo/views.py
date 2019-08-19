@@ -58,8 +58,10 @@ def todos():
     if not session.get('logged_in'):
         return redirect('/login')
     todos = db.session.query(Todo).filter(Todo.todo_status == False).all()
-
-    return render_template('todos.html', todos=todos)
+    if len(todos) <= 5:
+        return render_template('todos.html', todos=todos)
+    else:
+        return redirect('/todo/page/')
 
 
 @app.route('/todo', methods=['POST'])
@@ -85,7 +87,7 @@ def todo_delete(id):
     todo = db.session.query(Todo).get(id)
     db.session.delete(todo)
     db.session.commit()
-    flash("deleted a todo successfully.")
+    flash("Deleted a todo successfully.")
     return redirect('/todo')
 
 
@@ -105,3 +107,16 @@ def todo_json(id):
     todo = db.session.query(Todo).get(id)
     json_string = json.dumps(todo.serialize)
     return render_template('json.html', json_string=json_string)
+
+
+TODOS_PER_PAGE = 5
+@app.route('/todo/page/', defaults={'page': 1}, methods=['GET'])
+@app.route('/todo/page/<int:page>', methods=['GET'])
+def todo_paginated(page):
+    if not session.get('logged_in'):
+        return redirect('/login')
+
+    count = db.session.query(Todo).count()
+    pagination = db.session.query(Todo).filter(Todo.todo_status == False).paginate(page, TODOS_PER_PAGE, count)
+
+    return render_template('todos.html', pagination=pagination, todos=pagination.items)

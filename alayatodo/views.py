@@ -62,7 +62,7 @@ def todo(id):
 def todos():
     if not session.get('logged_in'):
         return redirect('/login')
-    todos = db.session.query(Todo).filter(Todo.todo_status == False).all()
+    todos = db.session.query(Todo).filter(Todo.user_id == session['user']['id']).filter(Todo.todo_status == False).all()
     if len(todos) <= 5:
         return render_template('todos.html', todos=todos)
     else:

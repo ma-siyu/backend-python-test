@@ -48,7 +48,7 @@ def logout():
 
 @app.route('/todo/<id>', methods=['GET'])
 def todo(id):
-    todo = db.seesion.query(Todo).get(id)
+    todo = db.session.query(Todo).get(id)
     return render_template('todo.html', todo=todo)
 
 

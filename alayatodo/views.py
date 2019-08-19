@@ -48,7 +48,12 @@ def logout():
 
 @app.route('/todo/<id>', methods=['GET'])
 def todo(id):
+    if not session.get('logged_in'):
+        return redirect('/login')
     todo = db.session.query(Todo).get(id)
+    if todo is None:
+        flash("Did not find todo with this id.")
+        return redirect('/todo')
     return render_template('todo.html', todo=todo)
 
 

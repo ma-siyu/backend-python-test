@@ -8,6 +8,8 @@ DEBUG = True
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'default'
+GOOGLE_RECAPTCHA_SITE_KEY = '6Le9xbMUAAAAAKXbIMF9fxtGaYFreySrAz03rUEr'
+GOOGLE_RECAPTCHA_SECRET_KEY = '6Le9xbMUAAAAAIFJC8Meiil671U289dlONMS_hwC'
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -15,7 +17,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////tmp/alayatodo.db"
 
 db = SQLAlchemy(app)
 with app.app_context():
-    from . import views
+    import alayatodo.views
     db.create_all()
 
 

@@ -12,6 +12,7 @@ from flask import (
 import json
 from collections import OrderedDict
 from .models import db, User, Todo
+from .recaptcha import recaptcha
 
 
 @app.route('/')
@@ -27,16 +28,20 @@ def login():
 
 
 @app.route('/login', methods=['POST'])
+@recaptcha
 def login_POST():
     username = request.form.get('username')
     password = request.form.get('password')
 
     user = db.session.query(User).filter(User.username == username).filter(User.password == password).first()
 
-    if user:
+    if user and request.recaptcha_is_valid:
         session['user'] = user.serialize
         session['logged_in'] = True
         response = make_response(redirect('/todo'))
+    elif not user:
+        flash("Username or password is wrong. Please try again.")
+        response = make_response(redirect('/login'))
     else:
         response = make_response(redirect('/login'))
     response.headers['Content-Security-Policy'] = "default-src 'self'"

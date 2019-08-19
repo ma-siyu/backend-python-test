@@ -6,7 +6,8 @@ from flask import (
     request,
     session,
     flash,
-    url_for
+    url_for,
+    make_response
     )
 import json
 from collections import OrderedDict
@@ -35,8 +36,11 @@ def login_POST():
     if user:
         session['user'] = user.serialize
         session['logged_in'] = True
-        return redirect('/todo')
-    return redirect('/login')
+        response = make_response(redirect('/todo'))
+    else:
+        response = make_response(redirect('/login'))
+    response.headers['Content-Security-Policy'] = "default-src 'self'"
+    return response
 
 
 @app.route('/logout')
@@ -88,9 +92,11 @@ def todos_POST():
         count = db.session.query(Todo).filter(Todo.user_id == session['user']['id']).filter(Todo.todo_status == False).count()
         if count > 5:
             # Page number is the ceiling division of todos count
-            return redirect(url_for('todo_paginated', page=(count+4)//5))
-
-    return redirect('/todo')
+            response = make_response(redirect(url_for('todo_paginated', page=(count+4)//5)))
+        else:
+            response = make_response(redirect('/todo'))
+        response.headers['Content-Security-Policy'] = "default-src 'self'"
+    return response
 
 
 

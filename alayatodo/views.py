@@ -122,6 +122,6 @@ def todo_paginated(page):
         return redirect('/login')
 
     count = db.session.query(Todo).count()
-    pagination = db.session.query(Todo).filter(Todo.todo_status == False).paginate(page, TODOS_PER_PAGE, count)
+    pagination = db.session.query(Todo).filter(Todo.user_id == session['user']['id']).filter(Todo.todo_status == False).paginate(page, TODOS_PER_PAGE, count)
 
     return render_template('todos.html', pagination=pagination, todos=pagination.items)

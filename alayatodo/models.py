@@ -6,7 +6,7 @@ class User(db.Model):
 
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.VARCHAR(255), nullable=False)
+    username = db.Column(db.VARCHAR(255), unique=True, nullable=False)
     password = db.Column(db.VARCHAR(255), nullable=False)
 
     @property

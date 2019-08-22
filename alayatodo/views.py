@@ -33,7 +33,9 @@ def login():
 def login_POST():
     username = request.form.get('username')
     password = request.form.get('password')
-    user = db.session.query(User).filter(User.username == username).filter(User.password == password).first()
+    user = db.session.query(User). \
+           filter(User.username == username). \
+           filter(User.password == password).first()
 
     if user and request.recaptcha_is_valid:
         session['user'] = user.serialize
@@ -59,7 +61,9 @@ def logout():
 @app.route('/todo/<id>/', methods=['GET'])
 @login_check
 def todo(id):
-    todo = db.session.query(Todo).filter(Todo.user_id == session['user']['id']).filter(Todo.id == id).first()
+    todo = db.session.query(Todo). \
+           filter(Todo.user_id == session['user']['id']). \
+           filter(Todo.id == id).first()
     if todo is None:
         flash("Did not find todo with this id.")
         return redirect('/todo')
@@ -72,7 +76,9 @@ def todo(id):
 @app.route('/todo/', methods=['GET'])
 @login_check
 def todos():
-    todos = db.session.query(Todo).filter(Todo.user_id == session['user']['id']).filter(Todo.todo_status == False).all()
+    todos = db.session.query(Todo). \
+            filter(Todo.user_id == session['user']['id']). \
+            filter(Todo.todo_status == False).all()
     if len(todos) <= 5:
         return render_template('todos.html', todos=todos)
     else:
@@ -87,17 +93,22 @@ def todos_POST():
     description = request.form.get('description', '')
     if not description.strip():
         flash("Cannot add a todo with no description.")
+        response = make_response(redirect('/todo'))
     else:
-        todo = Todo(user_id=session['user']['id'], description=description, todo_status=False)
+        todo = Todo(user_id=session['user']['id'],  \
+               description=description, todo_status=False)
         db.session.add(todo)
         db.session.commit()
         flash("Added a new todo successfully.")
 
         # If has multiple pages, redirect to last page after addition
-        count = db.session.query(Todo).filter(Todo.user_id == session['user']['id']).filter(Todo.todo_status == False).count()
+        count = db.session.query(Todo). \
+                filter(Todo.user_id == session['user']['id']). \
+                filter(Todo.todo_status == False).count()
         if count > 5:
             # Page number is the ceiling division of todos count
-            response = make_response(redirect(url_for('todo_paginated', page=(count+4)//5)))
+            response = make_response(redirect( \
+                       url_for('todo_paginated', page=(count+4)//5)))
         else:
             response = make_response(redirect('/todo'))
         response.headers['Content-Security-Policy'] = "default-src 'self'"
@@ -108,7 +119,9 @@ def todos_POST():
 @app.route('/todo/<id>', methods=['POST'])
 @login_check
 def todo_delete(id):
-    todo = db.session.query(Todo).filter(Todo.user_id == session['user']['id']).filter(Todo.id == id).first()
+    todo = db.session.query(Todo). \
+           filter(Todo.user_id == session['user']['id']). \
+           filter(Todo.id == id).first()
     if todo:
         db.session.delete(todo)
         db.session.commit()
@@ -122,7 +135,10 @@ def todo_delete(id):
 @login_check
 def todo_completed(id):
     if todo:
-        db.session.query(Todo).filter(Todo.user_id == session['user']['id']).filter(Todo.id == id).update({Todo.todo_status: True}, synchronize_session = False)
+        db.session.query(Todo). \
+        filter(Todo.user_id == session['user']['id']). \
+        filter(Todo.id == id).update({Todo.todo_status: True},  \
+        synchronize_session = False)
         db.session.commit()
     else:
         flash("Did not find todo with this id.")
@@ -133,7 +149,9 @@ def todo_completed(id):
 @app.route('/todo/<id>/json/', methods=['GET'])
 @login_check
 def todo_json(id):
-    todo = db.session.query(Todo).filter(Todo.user_id == session['user']['id']).filter(Todo.id == id).first()
+    todo = db.session.query(Todo). \
+           filter(Todo.user_id == session['user']['id']). \
+           filter(Todo.id == id).first()
     if todo:
         json_string = json.dumps(todo.serialize)
         return render_template('json.html', json_string=json_string)
@@ -146,11 +164,13 @@ TODOS_PER_PAGE = 5
 @app.route('/todo/page/', defaults={'page': 1}, methods=['GET'])
 @app.route('/todo/page/<int:page>', methods=['GET'])
 @app.route('/todo/page/<int:page>/', methods=['GET'])
+@login_check
 def todo_paginated(page):
-    if not session.get('logged_in'):
-        return redirect('/login')
-
     count = db.session.query(Todo).count()
-    pagination = db.session.query(Todo).filter(Todo.user_id == session['user']['id']).filter(Todo.todo_status == False).paginate(page, TODOS_PER_PAGE, count)
+    pagination = db.session.query(Todo). \
+                 filter(Todo.user_id == session['user']['id']). \
+                 filter(Todo.todo_status == False). \
+                 paginate(page, TODOS_PER_PAGE, count)
 
-    return render_template('todos.html', pagination=pagination, todos=pagination.items)
+    return render_template('todos.html', pagination=pagination, \
+           todos=pagination.items)

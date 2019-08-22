@@ -11,12 +11,7 @@ from flask import flash, request
 from .__init__ import *
 
 def recaptcha(f):
-    """
-    Checks Google reCAPTCHA.
 
-    :param f: view function
-    :return: Function
-    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         request.recaptcha_is_valid = None
@@ -27,6 +22,7 @@ def recaptcha(f):
                 'response': request.form.get('g-recaptcha-response'),
                 'remoteip': request.access_route[0]
             }
+
             r = requests.post(
                 "https://www.google.com/recaptcha/api/siteverify",
                 data=data

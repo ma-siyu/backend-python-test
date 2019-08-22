@@ -11,7 +11,8 @@ class User(db.Model):
 
     @property
     def serialize(self):
-        return {'username': self.username, 'id': self.id, 'password': self.password}
+        return {'username': self.username, 'id': self.id, \
+               'password': self.password}
 
     def _repr_(self):
         return '<User: %r>' %self.username
@@ -29,7 +30,8 @@ class Todo(db.Model):
 
     @property
     def serialize(self):
-        od = OrderedDict([('id', self.id), ('user_id', self.user_id), ('description', self.description)])
+        od = OrderedDict([('id', self.id), ('user_id', self.user_id), \
+             ('description', self.description)])
         return od
 
     def _repr_(self):
